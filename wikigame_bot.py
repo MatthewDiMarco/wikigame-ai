@@ -1,5 +1,6 @@
 import sys
 import random
+import time
 import traceback
 import requests as req
 from bs4 import BeautifulSoup as soup
@@ -45,17 +46,20 @@ def main():
             counter = TURNS
             curr_page = start_page
             
+            start_seconds = time.time() # start timer
             while (not curr_page.url == target_page.url) and (counter > 0):
-                print("reading...")
                 successor_link = curr_page.analyse_links(target_name)
                 print("moving to... {}".format(successor_link))
                 curr_page = Page(successor_link)
                 counter = counter - 1
                 
+            playtime = round(time.time() - start_seconds, 4) # stop timer
             if counter > 0:
                 print(CGRE + "Bot wins!" + CEND)
             else:
-                print(CRED + "Bot fails: No turns remain..." + CRED)
+                print(CRED + "Bot fails: No turns remain..." + CEND)
+                
+            print("Time: {} seconds".format(playtime))
                                 
     except (ValueError, IndexError) as e:
         print(CRED + "{}".format(e) + CEND)
