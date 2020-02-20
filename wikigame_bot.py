@@ -109,13 +109,7 @@ class Bot:
         
         Breaks up str1 and str2 into 2 lists of words. A cross-product comparison
         is carried out between the 2 lists, and words similar or identical in
-        syntax / meaning are picked out. The highest calculated similarity
-        from the wordnet function is then returned.
-        
-        Dependencies: nltk.corpus - wordnet
-        For this bot to work, run the following:
-            >>> import nltk
-            >>> nltk.download() 
+        syntax / meaning are picked out. Returns highest calculated confidence.
         """   
         best_confidence = 0
         syns = wordnet.synsets("program")
