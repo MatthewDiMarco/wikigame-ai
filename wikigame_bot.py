@@ -10,7 +10,7 @@ CRED = '\033[91m' #red
 CGRE = '\33[32m' #green
 CEND = '\033[0m' #def
 TURNS = 50
-WIKIPEDIA = 'https://en.wikipedia.org/wiki/'
+HTTPS = 'https://en.wikipedia.org/wiki/'
 SYNTAX = (
     'USAGE: python wikigame_bot.py <start_url> <target_url>'
 ) 
@@ -67,49 +67,49 @@ def main():
 
 class Bot:
     def __init__(self, target_page):
+        """Memory: list for tracking visited pages."""
         self.clicks = 0
         self.target = target_page
+        self.memory = []
         
     def read(self, article):
         """
-        Analyse links for keywords. 
-        Guesstimates and returns link with best similarity to target.
+        Analyse links for keywords.
+        Return link with best confidence.
         """
-        links = article.scrape_links()
-        best_article = (0,0) # tuple for tracking best link: (index,score)
+        self.memory.append(article.get_name().lower())
         
         target = self.target.get_name()
-        article_found = False
-        ii = 0
-        while ii < len(links) and not article_found:
-            if links[ii].lower() == target.lower():
-                article_found = True
-                best_article = (ii,1.0)
+        links_ranked = []
+        best_link = ''
+        
+        # sort links by confidence
+        links = article.scrape_links()
+        for ii in range(len(links)):
+            if links[ii].lower == target.lower():
+                return links[ii]
             else:
-                score = self.__confidence(links[ii], target) 
-    
-                # guesstimate (i.e. add x% randomness to link selection to avoid infinite loops)
-                PERCENT_VARIANCE = 5 #%
-                margin = (PERCENT_VARIANCE / 100) * score
-                score += random.uniform(-margin, margin)
-                
-                if score > best_article[1]:
-                    best_article = (ii,score)
-                elif score == best_article[1]: # swap articles? toss a coin
-                    if random.randint(0,1) == 1:
-                        best_article = (ii,score)
-                
+                links_ranked.append((links[ii], self.__confidence(links[ii], target)))
+            
+        links_ranked.sort(key=lambda elem: elem[1], reverse=True)
+
+        # return top element unless bot has already visited the article (memory)
+        ii,length = 0,len(links_ranked)
+        best_link = ''
+        searching = True
+        while searching:
+            best_link = links_ranked[ii][0]
+            if best_link.lower() not in self.memory or ii >= length:
+                searching = False
             ii = ii + 1
         
-        return links[best_article[0]]
+        return best_link
     
     def __confidence(self, str1, str2):
         """
         Returns the bot's 'confidence' in an article as a decimal between 0 and 1.
-        
-        Breaks up str1 and str2 into 2 lists of words. A cross-product comparison
-        is carried out between the 2 lists, and words similar or identical in
-        syntax / meaning are picked out. Returns highest calculated confidence.
+        Achieved by splitting up strings into words and analysing each word
+        independantly to uncover keywords.
         """   
         best_confidence = 0
         syns = wordnet.synsets("program")
@@ -141,7 +141,7 @@ class Bot:
 
 class Page:
     def __init__(self, name):        
-        self.url = ''.join((WIKIPEDIA, name))
+        self.url = ''.join((HTTPS, name))
         
     def exists(self):
         """Returns true if the url is a real article."""
@@ -173,7 +173,7 @@ class Page:
             if (  
                 not links_soup[ii]["href"].lower().endswith(".jpg") and \
                 not links_soup[ii]["href"].lower().endswith(".png") and \
-                not len(links_soup[ii]["href"]) > 30
+                not len(links_soup[ii]["href"]) > 40
             ): 
                 # convert soup to string and take just the name (dump '/wiki/')
                 links.append(links_soup[ii]["href"].split("/")[2])
@@ -183,13 +183,6 @@ class Page:
     def get_name(self):
         """Returns the name of the article without the url"""
         return self.url.split("/")[4]
-    
-    def display(self):
-        """Print out this page's url plus all it's links"""
-        print("This page: {}".format(self.url))
-        links = self.scrape_links()
-        for ii in range(len(links)):
-            print(links[ii])
     
     def __get_body(self):
         """Returns the body content of an article as a soup obj"""

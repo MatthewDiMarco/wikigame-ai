@@ -7,7 +7,7 @@ The goal was to create a bot/ai that could play the [wikigame](https://www.thewi
 ```
 python wikigame_bot.py <start_page> <target_page>
 ```
-Please note that <start_page> and <target_page> are the article names, NOT the URLs. The script will validate the articles automatically before commencing the game. For example:
+Please note that <start_page> and <target_page> are the article names, not the URLs. The script will validate the articles automatically before commencing the game. For example:
 ```
 python wikigame_bot.py The_Doors Mathematics
 
@@ -37,9 +37,3 @@ import nltk
 nltk.download() 
 ```
 After this, the script should be ready to go.
-
-# How it works
-Once the start and target pages have been defined, the following algorithm starts:
-1. Scrape all the links from the current page and put them in a list.
-2. For each link: Use the Wu-Palmer Semantic Similarity method from the nltk wordnet import to find keywords between the current article name and the target article name. Additionally, throw in a + or - 5% randomness to the score to help the bot avoid getting stuck in loops.
-3. If we found a link in the list that is an exact match to the target link, then the game ends. Else, repeat steps 1 with the best link the bot could find until the bot wins or runs out of turns.
